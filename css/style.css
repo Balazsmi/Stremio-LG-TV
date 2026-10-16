@@ -1,28 +1,27 @@
-/* Bewusst so schlank wie möglich gehalten:
-   keine Transitions, keine Animationen, kein Web-Font-Loading,
-   nichts, was auf einem TV mit wenig RAM zusätzlichen
-   Compositing-/Repaint-Overhead erzeugt. */
-
-* {
-  margin: 0;
-  padding: 0;
-  border: 0;
+/* No web fonts, animations or persistent polling on the TV. */
+* { box-sizing: border-box; }
+html, body { width: 100%; height: 100%; margin: 0; overflow: hidden; }
+body { background: #0f0b1b; color: #f7f5ff; font: 28px Arial, sans-serif; }
+[hidden] { display: none !important; }
+main { position: absolute; top: 18%; left: 8%; width: 84%; text-align: center; }
+.logo { border-radius: 20px; }
+h1 { margin: 18px 0; font-size: 60px; }
+p { margin: 18px 0; line-height: 1.6; }
+#status, #recovery-status { color: #ded3ff; }
+#hint, .note { color: #c2bdcd; }
+.note { font-size: 22px; }
+button {
+  display: inline-block; margin: 12px 8px; padding: 18px 26px;
+  border: 3px solid #655878; border-radius: 10px;
+  background: #241c35; color: #fff; font: inherit; cursor: pointer;
 }
-
-html, body {
-  width: 100%;
-  height: 100%;
-  background: #000; /* verhindert weißes Aufblitzen beim Laden */
-  overflow: hidden;  /* keine Scrollbars, kein Scroll-Repaint */
+button:focus { outline: 4px solid #fff; border-color: #c7b2ff; background: #6647a4; }
+#stremio-frame { position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: 0; background: #000; }
+#recovery-panel {
+  position: absolute; z-index: 2; left: 3%; bottom: 3%; width: 94%;
+  padding: 12px 28px; background: #191124; border: 2px solid #8e79b4;
+  border-radius: 14px; text-align: center; font-size: 25px;
 }
-
-#stremio-frame {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100vw;
-  height: 100vh;
-  border: none;
-  background: #000;
-  /* keine box-shadow/filter/opacity-Transitions -> spart GPU/RAM */
-}
+#recovery-panel p { margin: 8px 0; }
+#help { position: absolute; z-index: 1; right: 24px; bottom: 16px; font-size: 20px; padding: 8px 14px; }
+noscript { display: block; position: absolute; top: 10px; width: 100%; text-align: center; }

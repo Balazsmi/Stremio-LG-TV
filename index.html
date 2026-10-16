@@ -1,31 +1,39 @@
 <!DOCTYPE html>
-<html lang="de">
+<html lang="en" dir="ltr">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=1920, height=1080, user-scalable=no">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Stremio TV</title>
-
-  <!-- Verbindung zu Stremio + bekanntem Addon-Server schon vorab aufbauen,
-       damit DNS/TLS nicht erst beginnt, wenn das iframe selbst navigiert.
-       Spart auf TVs mit langsamem DNS-Resolver oft mehrere Sekunden. -->
   <link rel="preconnect" href="https://tv.strem.io">
   <link rel="dns-prefetch" href="https://tv.strem.io">
-  <link rel="preconnect" href="https://v3-cinemeta.strem.io" crossorigin>
-  <link rel="dns-prefetch" href="https://v3-cinemeta.strem.io">
-
   <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
-  <!-- tabindex="-1" macht das iframe fokussierbar per JS,
-       ohne dass es im normalen Tab-Fluss auftaucht -->
-  <iframe
-    id="stremio-frame"
-    src="https://tv.strem.io"
-    tabindex="-1"
-    allow="autoplay; fullscreen; encrypted-media"
-    allowfullscreen>
-  </iframe>
-
+  <main id="launcher">
+    <img class="logo" src="icon.png" alt="" width="96" height="96">
+    <h1>Stremio</h1>
+    <p id="status" role="status" aria-live="polite">Preparing to open Stremio...</p>
+    <p id="hint">Opening automatically in 3 seconds. Press any arrow to choose an option.</p>
+    <div id="actions" role="group" aria-label="Startup options">
+      <button id="open" type="button">Open Stremio</button>
+      <button id="recovery" type="button">Recovery mode</button>
+      <button id="exit" type="button">Exit</button>
+    </div>
+    <p class="note">If Stremio gets stuck on its logo, choose Recovery mode when starting the app.</p>
+  </main>
+  <section id="recovery-panel" hidden aria-label="Startup recovery">
+    <p id="recovery-status" role="status" aria-live="polite">Loading Stremio...</p>
+    <p>When the menus appear, choose Continue. If the logo stays on screen, choose Retry or Open directly.</p>
+    <div role="group" aria-label="Recovery tools">
+      <button id="continue" type="button">Continue</button>
+      <button id="retry" type="button">Retry</button>
+      <button id="direct" type="button">Open directly</button>
+      <button id="home" type="button">Startup options</button>
+    </div>
+    <p class="note">Opening directly leaves Recovery mode. You may need to sign in again after switching modes.</p>
+  </section>
+  <button id="help" type="button" hidden>Startup recovery</button>
+  <noscript>Unable to start. JavaScript is required to run Stremio.</noscript>
   <script src="main.js"></script>
 </body>
 </html>

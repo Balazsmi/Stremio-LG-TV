@@ -1,0 +1,103 @@
+name: Build webOS IPK
+
+on:
+  push:
+    branches: [main]
+    tags: ['v*']
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: webos-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  build:
+    name: Test and build
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Check out source
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+
+      - name: Set up Python
+        uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
+        with:
+          python-version: '3.13'
+
+      - name: Build and verify package
+        shell: bash
+        run: |
+          set -euo pipefail
+          node --check main.js
+          if [[ "$GITHUB_REF" == refs/tags/* ]]; then
+            python tools/build_ipk.py --tag "$GITHUB_REF_NAME"
+          else
+            python tools/build_ipk.py
+          fi
+          cd dist
+          sha256sum --check *.sha256
+
+      - name: Install browser test dependencies
+        run: |
+          python -m pip install -r requirements-test.txt
+          python -m playwright install --with-deps chromium
+
+      - name: Run browser and release checks
+        run: python -m unittest discover -s tests -v
+
+      - name: Upload verified package
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: webos-ipk
+          path: |
+            dist/*.ipk
+            dist/*.sha256
+          if-no-files-found: error
+          retention-days: 14
+
+  release:
+    name: Publish test release
+    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: write
+    steps:
+      - name: Download tested package
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with:
+          name: webos-ipk
+          path: dist
+
+      - name: Verify release assets and publish
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          RELEASE_TAG: ${{ github.ref_name }}
+        run: |
+          set -euo pipefail
+          (cd dist && sha256sum --check *.sha256)
+          cat > release-notes.md <<'EOF'
+          Experimental LG webOS build. Install the .ipk with webOS TV Device Manager.
+
+          Includes an English startup interface, direct hosted-app launch and recovery mode with manual retry.
+
+          Automated browser tests and package validation passed on GitHub Actions.
+          Broader testing across LG TV models, standby/resume scenarios, remote Back behavior and media formats remains open.
+          Changing launch modes may require signing in again.
+          EOF
+          gh release create "$RELEASE_TAG" dist/*.ipk dist/*.sha256 \
+            --verify-tag \
+            --title "Stremio LG TV $RELEASE_TAG (test build)" \
+            --notes-file release-notes.md \
+            --generate-notes \
+            --prerelease \
+            --latest=false
